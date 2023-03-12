@@ -53,8 +53,11 @@ class GameController(object):
         self.nodes = NodeGroup(self.mazedata.obj.name+".txt")
         self.mazedata.obj.setPortalPairs(self.nodes)
         self.mazedata.obj.connectHomeNodes(self.nodes)
-        self.pacman = Pacman(self.nodes.getNodeFromTiles(*self.mazedata.obj.pacmanStart))
         self.pellets = PelletGroup(self.mazedata.obj.name+".txt")
+        # ======= HAND IN 1 MODIFICATION ===========
+        #self.pacman = Pacman(self.nodes.getNodeFromTiles(*self.mazedata.obj.pacmanStart))
+        self.pacman = Pacman(self.nodes.getNodeFromTiles(*self.mazedata.obj.pacmanStart), self.nodes, self.pellets.pelletLUT)
+        # ==========================================
         self.ghosts = GhostGroup(self.nodes.getStartTempNode(), self.pacman)
 
         self.ghosts.pinky.setStartNode(self.nodes.getNodeFromTiles(*self.mazedata.obj.addOffset(2, 3)))
@@ -109,7 +112,7 @@ class GameController(object):
             if self.fruit is not None:
                 self.fruit.update(dt)
             self.checkPelletEvents()
-            self.checkGhostEvents()
+            #self.checkGhostEvents()
             self.checkFruitEvents()
 
         if self.pacman.alive:
@@ -158,6 +161,7 @@ class GameController(object):
             if self.pellets.numEaten == 70:
                 self.ghosts.clyde.startNode.allowAccess(LEFT, self.ghosts.clyde)
             self.pellets.pelletList.remove(pellet)
+            self.pellets.pelletLUT.pop((pellet.position.x, pellet.position.y))
             if pellet.name == POWERPELLET:
                 self.ghosts.startFreight()
             if self.pellets.isEmpty():
@@ -252,6 +256,7 @@ class GameController(object):
         self.screen.blit(self.background, (0, 0))
         #self.nodes.render(self.screen)
         self.pellets.render(self.screen)
+        self.pacman.debugPellet.render(self.screen)
         if self.fruit is not None:
             self.fruit.render(self.screen)
         self.pacman.render(self.screen)
