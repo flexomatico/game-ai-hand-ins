@@ -79,10 +79,10 @@ class Entity(object):
         directions = []
         for key in [UP, DOWN, LEFT, RIGHT]:
             if self.validDirection(key):
-                if self.name is PACMAN:
-                   directions.append(key)
-                elif key != self.direction * -1:
+                if key != self.direction * -1:
                     directions.append(key)
+                elif self.name is PACMAN:
+                   directions.append(key)
         if len(directions) == 0:
             directions.append(self.direction * -1)
         return directions

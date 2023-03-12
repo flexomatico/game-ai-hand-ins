@@ -28,11 +28,16 @@ class Node(object):
                 pygame.draw.line(screen, WHITE, line_start, line_end, 4)
                 pygame.draw.circle(screen, RED, self.position.asInt(), 12)
 
+class Edge(object):
+    def __init__(self, node1, node2):
+        self.node1 = node1
+        self.node2 = node2
 
 class NodeGroup(object):
     def __init__(self, level):
         self.level = level
         self.nodesLUT = {}
+        self.edges = {}
         self.nodeSymbols = ['+', 'P', 'n']
         self.pathSymbols = ['.', '-', '|', 'p']
         data = self.readMazeFile(level)
@@ -42,6 +47,8 @@ class NodeGroup(object):
         self.homekey = None
         # ======= HAND IN 1 MODIFICATION ===========
         self.costs = self.get_nodes()
+        self.createHorizontalEdges(data)
+        self.createVerticalEdges(data)
         # ==========================================
 
     def readMazeFile(self, textfile):
@@ -56,6 +63,43 @@ class NodeGroup(object):
 
     def constructKey(self, x, y):
         return x * TILEWIDTH, y * TILEHEIGHT
+    
+    def createHorizontalEdges(self, data, xoffset=0, yoffset=0):
+        for row in list(range(data.shape[0])):
+            nodeLeftKey = None
+            edgeHasPellets = False
+            for col in list(range(data.shape[1])):
+                if data[row][col] in self.nodeSymbols:
+                    if nodeLeftKey is None:
+                        nodeLeftKey = self.constructKey(col+xoffset, row+yoffset)
+                    elif edgeHasPellets:
+                        nodeRightKey = self.constructKey(col+xoffset, row+yoffset)
+                        self.edges[(self.nodesLUT[nodeLeftKey], self.nodesLUT[nodeRightKey])] = Edge(nodeLeftKey, nodeRightKey)
+                        edgeHasPellets = False
+                        nodeLeftKey = self.constructKey(col+xoffset, row+yoffset)
+                    else:
+                        nodeLeftKey = self.constructKey(col+xoffset, row+yoffset)
+                elif data[row][col] in ['.']:
+                        edgeHasPellets = True
+
+    def createVerticalEdges(self, data, xoffset=0, yoffset=0):
+        dataT = data.transpose()
+        for col in list(range(dataT.shape[0])):
+            nodeLeftKey = None
+            edgeHasPellets = False
+            for row in list(range(dataT.shape[1])):
+                if dataT[col][row] in self.nodeSymbols:
+                    if nodeLeftKey is None:
+                        nodeLeftKey = self.constructKey(col+xoffset, row+yoffset)
+                    elif edgeHasPellets:
+                        nodeRightKey = self.constructKey(col+xoffset, row+yoffset)
+                        self.edges[(self.nodesLUT[nodeLeftKey], self.nodesLUT[nodeRightKey])] = Edge(nodeLeftKey, nodeRightKey)
+                        edgeHasPellets = False
+                        nodeLeftKey = self.constructKey(col+xoffset, row+yoffset)
+                    else:
+                        nodeLeftKey = self.constructKey(col+xoffset, row+yoffset)
+                elif dataT[col][row] in ['.']:
+                        edgeHasPellets = True
 
 
     def connectHorizontally(self, data, xoffset=0, yoffset=0):
@@ -69,6 +113,7 @@ class NodeGroup(object):
                         otherkey = self.constructKey(col+xoffset, row+yoffset)
                         self.nodesLUT[key].neighbors[RIGHT] = self.nodesLUT[otherkey]
                         self.nodesLUT[otherkey].neighbors[LEFT] = self.nodesLUT[key]
+                        #self.edges[(self.nodesLUT[key], self.nodesLUT[otherkey])] = Edge(key, otherkey)
                         key = otherkey
                 elif data[row][col] not in self.pathSymbols:
                     key = None
@@ -85,6 +130,7 @@ class NodeGroup(object):
                         otherkey = self.constructKey(col+xoffset, row+yoffset)
                         self.nodesLUT[key].neighbors[DOWN] = self.nodesLUT[otherkey]
                         self.nodesLUT[otherkey].neighbors[UP] = self.nodesLUT[key]
+                        #self.edges[(self.nodesLUT[key], self.nodesLUT[otherkey])] = Edge(key, otherkey)
                         key = otherkey
                 elif dataT[col][row] not in self.pathSymbols:
                     key = None

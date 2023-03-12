@@ -12,6 +12,7 @@ class Pellet(object):
         self.collideRadius = 2 * TILEWIDTH / 16
         self.points = 10
         self.visible = True
+        self.neighbors = {UP:None, DOWN:None, LEFT:None, RIGHT:None}
         
     def render(self, screen):
         if self.visible:
@@ -66,6 +67,7 @@ class PelletGroup(object):
                     self.pelletList.append(pp)
                     self.powerpellets.append(pp)
                     self.pelletLUT[(pp.position.x, pp.position.y)] = pp
+        return data
                     
     def readPelletfile(self, textfile):
         return np.loadtxt(textfile, dtype='<U1')
@@ -78,34 +80,3 @@ class PelletGroup(object):
     def render(self, screen):
         for pellet in self.pelletList:
             pellet.render(screen)
-
-    def connectHorizontally(self, data, xoffset=0, yoffset=0):
-        for row in list(range(data.shape[0])):
-            key = None
-            for col in list(range(data.shape[1])):
-                if data[row][col] in ['.', '+', 'P', 'p']:
-                    if key is None:
-                        key = self.constructKey(col+xoffset, row+yoffset)
-                    else:
-                        otherkey = self.constructKey(col+xoffset, row+yoffset)
-                        self.nodesLUT[key].neighbors[RIGHT] = self.nodesLUT[otherkey]
-                        self.nodesLUT[otherkey].neighbors[LEFT] = self.nodesLUT[key]
-                        key = otherkey
-                elif data[row][col] not in ['.', '+', 'P', 'p']:
-                    key = None
-
-    def connectVertically(self, data, xoffset=0, yoffset=0):
-        dataT = data.transpose()
-        for col in list(range(dataT.shape[0])):
-            key = None
-            for row in list(range(dataT.shape[1])):
-                if dataT[col][row] in ['.', '+', 'P', 'p']:
-                    if key is None:
-                        key = self.constructKey(col+xoffset, row+yoffset)
-                    else:
-                        otherkey = self.constructKey(col+xoffset, row+yoffset)
-                        self.nodesLUT[key].neighbors[DOWN] = self.nodesLUT[otherkey]
-                        self.nodesLUT[otherkey].neighbors[UP] = self.nodesLUT[key]
-                        key = otherkey
-                elif dataT[col][row] not in ['.', '+', 'P', 'p']:
-                    key = None

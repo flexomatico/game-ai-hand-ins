@@ -4,13 +4,13 @@ from vector import Vector2
 from constants import *
 from entity import Entity
 from sprites import PacmanSprites
-from algorithms import dijkstra_or_a_star
-from random import choice
+from algorithms import dijkstra_or_a_star, dijkstra
 from pellets import DebugPellet
 import copy
+import sys
 
 class Pacman(Entity):
-    def __init__(self, node, nodes, pelletLUT):
+    def __init__(self, node, nodes, pelletLUT, pelletList, edges):
         Entity.__init__(self, node)
         self.name = PACMAN    
         self.color = YELLOW
@@ -22,7 +22,11 @@ class Pacman(Entity):
         self.directionMethod = self.goalDirectionDij
         self.nodes = nodes
         self.pelletLUT = pelletLUT
+        self.pelletList = pelletList
         self.debugPellet = DebugPellet(10, 10)
+        self.edges = edges
+        self.goal = self.pelletList[0].position
+        self.tempDirection = LEFT
         # ==========================================
 
     def reset(self):
@@ -40,27 +44,32 @@ class Pacman(Entity):
     def update(self, dt):	
         self.sprites.update(dt)
         self.position += self.directions[self.direction]*self.speed*dt
-        # ======= HAND IN 1 MODIFICATION ===========
-        #direction = self.getValidKey()
-        directions = self.validDirections()
-        #print(directions)
-        direction = self.directionMethod(directions)
-        #print(direction)
-        # ==========================================
+        
         if self.overshotTarget():
+            print(len(self.edges))
+            if (self.node, self.target) in self.edges:
+                e = self.edges.pop((self.node, self.target))
+            elif (self.target, self.node) in self.edges:
+                e = self.edges.pop((self.target, self.node))
             self.node = self.target
+            # ======= HAND IN 1 MODIFICATION ===========
+            directions = self.validDirections()
+            self.tempDirection = self.directionMethod(directions)
+            # ==========================================
+            #self.goal = self.pelletList[0].position
+            #self.debugPellet.position = self.goal
             if self.node.neighbors[PORTAL] is not None:
                 self.node = self.node.neighbors[PORTAL]
-            self.target = self.getNewTarget(direction)
+            self.target = self.getNewTarget(self.tempDirection)
             if self.target is not self.node:
-                self.direction = direction
+                self.direction = self.tempDirection
             else:
                 self.target = self.getNewTarget(self.direction)
             if self.target is self.node:
                 self.direction = STOP
             self.setPosition()
         else: 
-            if self.oppositeDirection(direction):
+            if self.oppositeDirection(self.tempDirection):
                 self.reverseDirection()
 
     def getValidKey(self):
@@ -98,12 +107,15 @@ class Pacman(Entity):
     def getDijkstraPath(self, directions):
         lastPacmanNode = self.target
         lastPacmanNode = self.nodes.getVectorFromLUTNode(lastPacmanNode)
-        pelletNode = self.findClosestPellet(self.nodes, lastPacmanNode, self.pelletLUT)
-        #pelletNode = (1*TILEWIDTH, 4*TILEHEIGHT)
+        #pelletNode = self.findClosestPellet(self.nodes, lastPacmanNode, self.pelletLUT)
+        closestEdge = self.findClosestEdge(self.nodes, lastPacmanNode, self.edges)
+        #if pelletNode is None:
+        #    return None
 
-        previous_nodes, shortest_path = dijkstra_or_a_star(self.nodes, lastPacmanNode, True, pelletNode)
+        previous_nodes, shortest_path = dijkstra_or_a_star(self.nodes, lastPacmanNode, True, closestEdge.node1)
         path = []
-        node = pelletNode
+        path.append(closestEdge.node2)
+        node = closestEdge.node1
         while node != lastPacmanNode:
             path.append(node)
             node = previous_nodes[node]
@@ -115,22 +127,27 @@ class Pacman(Entity):
     # returned path
     def goalDirectionDij(self, directions):
         path = self.getDijkstraPath(directions)
+        #if path is None:
+        #    self.directionMethod = self.goalDirection
+        #    self.goal = self.pelletList[0].position
+        #    self.directionMethod(directions)
+        #    return
         pacmanTarget = self.target
         pacmanTarget = self.nodes.getVectorFromLUTNode(pacmanTarget)
         nextPacmanTarget = path[1]
         self.debugPellet.position = Vector2(nextPacmanTarget[0], nextPacmanTarget[1])
         #print(len(path))
         if pacmanTarget[0] > nextPacmanTarget[0] and 2 in directions : #left
-            print("LEFT")
+            #print("LEFT")
             return 2
         if pacmanTarget[0] < nextPacmanTarget[0] and -2 in directions : #right
-            print("RIGHT")
+            #print("RIGHT")
             return -2
         if pacmanTarget[1] > nextPacmanTarget[1] and 1 in directions : #up
-            print("UP")
+            #print("UP")
             return 1
         if pacmanTarget[1] < nextPacmanTarget[1] and -1 in directions : #down
-            print("DOWN")
+            #print("DOWN")
             return -1
         
         return self.direction
@@ -154,6 +171,22 @@ class Pacman(Entity):
                     visited[neighbor] = True
                     if neighbor in pelletLUT:
                         return neighbor
+                    
+    def findClosestEdge(self, nodes, start_node, edges):
+        minDist = sys.maxsize
+        closestEdge = None
+        for key in edges:
+            edge = edges[key]
+            vec = Vector2(edge.node1[0], edge.node1[1]) - Vector2(start_node[0], start_node[1])
+            vecLength = vec.magnitudeSquared()
+            if vecLength < minDist:
+                minDist = vecLength
+                closestEdge = edges[key]
+
+        return closestEdge
+
+
+
 
 
         
