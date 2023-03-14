@@ -107,20 +107,20 @@ class Pacman(Entity):
         #pelletNode = self.findClosestPellet(self.nodes, lastPacmanNode, self.pelletLUT)
         closestEdge = self.findClosestEdge(self.nodes, lastPacmanNode, self.edges)
 
-        #path = a_star(self.nodes, lastPacmanNode, closestEdge.node1, Heuristic(closestEdge.node1, self.ghosts.ghosts))
-        #path.append(closestEdge.node2)
-        #return path
-
-        previous_nodes, shortest_path = dijkstra_or_a_star(self.nodes, lastPacmanNode, True, closestEdge.node1)
-        path = []
+        path = a_star(self.nodes, lastPacmanNode, closestEdge.node1, Heuristic(closestEdge.node1, self.ghosts.ghosts))
         path.append(closestEdge.node2)
-        node = closestEdge.node1
-        while node != lastPacmanNode:
-            path.append(node)
-            node = previous_nodes[node]
-        path.append(lastPacmanNode)
-        path.reverse()
         return path
+
+        #previous_nodes, shortest_path = dijkstra_or_a_star(self.nodes, lastPacmanNode, True, closestEdge.node1)
+        #path = []
+        #path.append(closestEdge.node2)
+        #node = closestEdge.node1
+        #while node != lastPacmanNode:
+        #    path.append(node)
+        #    node = previous_nodes[node]
+        #path.append(lastPacmanNode)
+        #path.reverse()
+        #return path
 
     # Chooses direction in which to turn based on the dijkstra
     # returned path
@@ -128,7 +128,7 @@ class Pacman(Entity):
         path = self.getDijkstraPath(directions)
         pacmanTarget = self.target
         pacmanTarget = self.nodes.getVectorFromLUTNode(pacmanTarget)
-        nextPacmanTarget = path[1]
+        nextPacmanTarget = path[0]
         #nextPacmanTarget = path[0].toNode.node
         self.debugPellet.position = Vector2(nextPacmanTarget[0], nextPacmanTarget[1])
         #print(len(path))
@@ -148,13 +148,17 @@ class Pacman(Entity):
         return self.direction
         # up 1, down -1, left 2, right -2
 
-    def findClosestPellet(self, nodes, start_node, pelletLUT):
+    def findClosestEdgeBFS(self, nodes, start_node):
         queue = []
         queue.append(start_node)
         visited = copy.deepcopy(nodes.nodesLUT)
         for key in visited:
             visited[key] = False
         visited[start_node] = True
+        edgeNodesList = []
+        for key in self.edges:
+            edgeNodesList.append(self.edges[key].node1)
+            edgeNodesList.append(self.edges[key].node2)
 
         while queue:
             node = queue.pop(0)
@@ -164,7 +168,7 @@ class Pacman(Entity):
                 if visited[neighbor] == False:
                     queue.append(neighbor)
                     visited[neighbor] = True
-                    if neighbor in pelletLUT:
+                    if neighbor in edgeNodesList:
                         return neighbor
                     
     def findClosestEdge(self, nodes, start_node, edges):

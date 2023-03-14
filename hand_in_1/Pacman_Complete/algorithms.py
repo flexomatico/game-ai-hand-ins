@@ -183,7 +183,7 @@ def a_star(nodes, startNode, endNode, heuristic):
         
         # Work back along the path, accumulating connections.
         while current.node != startNode:
-            path.append(current.connection)
+            path.append(current.connection.toNode.node)
             current = current.connection.getFromNode()
 
         # Reverse the path, and return it.
