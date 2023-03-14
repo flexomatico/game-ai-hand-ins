@@ -4,7 +4,7 @@ from vector import Vector2
 from constants import *
 from entity import Entity
 from sprites import PacmanSprites
-from algorithms import dijkstra_or_a_star, dijkstra
+from algorithms import dijkstra_or_a_star, dijkstra, a_star, Heuristic
 from pellets import DebugPellet
 import copy
 import sys
@@ -46,18 +46,15 @@ class Pacman(Entity):
         self.position += self.directions[self.direction]*self.speed*dt
         
         if self.overshotTarget():
-            print(len(self.edges))
+            #print(len(self.edges))
             if (self.node, self.target) in self.edges:
                 e = self.edges.pop((self.node, self.target))
             elif (self.target, self.node) in self.edges:
                 e = self.edges.pop((self.target, self.node))
             self.node = self.target
-            # ======= HAND IN 1 MODIFICATION ===========
             directions = self.validDirections()
             self.tempDirection = self.directionMethod(directions)
             # ==========================================
-            #self.goal = self.pelletList[0].position
-            #self.debugPellet.position = self.goal
             if self.node.neighbors[PORTAL] is not None:
                 self.node = self.node.neighbors[PORTAL]
             self.target = self.getNewTarget(self.tempDirection)
@@ -109,8 +106,10 @@ class Pacman(Entity):
         lastPacmanNode = self.nodes.getVectorFromLUTNode(lastPacmanNode)
         #pelletNode = self.findClosestPellet(self.nodes, lastPacmanNode, self.pelletLUT)
         closestEdge = self.findClosestEdge(self.nodes, lastPacmanNode, self.edges)
-        #if pelletNode is None:
-        #    return None
+
+        #path = a_star(self.nodes, lastPacmanNode, closestEdge.node1, Heuristic(closestEdge.node1, self.ghosts.ghosts))
+        #path.append(closestEdge.node2)
+        #return path
 
         previous_nodes, shortest_path = dijkstra_or_a_star(self.nodes, lastPacmanNode, True, closestEdge.node1)
         path = []
@@ -127,14 +126,10 @@ class Pacman(Entity):
     # returned path
     def goalDirectionDij(self, directions):
         path = self.getDijkstraPath(directions)
-        #if path is None:
-        #    self.directionMethod = self.goalDirection
-        #    self.goal = self.pelletList[0].position
-        #    self.directionMethod(directions)
-        #    return
         pacmanTarget = self.target
         pacmanTarget = self.nodes.getVectorFromLUTNode(pacmanTarget)
         nextPacmanTarget = path[1]
+        #nextPacmanTarget = path[0].toNode.node
         self.debugPellet.position = Vector2(nextPacmanTarget[0], nextPacmanTarget[1])
         #print(len(path))
         if pacmanTarget[0] > nextPacmanTarget[0] and 2 in directions : #left
@@ -177,16 +172,11 @@ class Pacman(Entity):
         closestEdge = None
         for key in edges:
             edge = edges[key]
-            vec = Vector2(edge.node1[0], edge.node1[1]) - Vector2(start_node[0], start_node[1])
-            vecLength = vec.magnitudeSquared()
-            if vecLength < minDist:
-                minDist = vecLength
-                closestEdge = edges[key]
+            if edge.node1 != start_node:
+                vec = Vector2(edge.node1[0], edge.node1[1]) - Vector2(start_node[0], start_node[1])
+                vecLength = vec.magnitudeSquared()
+                if vecLength < minDist:
+                    minDist = vecLength
+                    closestEdge = edges[key]
 
-        return closestEdge
-
-
-
-
-
-        
+        return closestEdge  
