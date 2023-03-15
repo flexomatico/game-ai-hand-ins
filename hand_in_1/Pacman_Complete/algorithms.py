@@ -15,7 +15,7 @@ class Connection():
         self.toNode = toNode
 
     def getCost(self):
-        return self.cost
+        return 1
     
     def getFromNode(self):
         return self.fromNode
@@ -25,7 +25,7 @@ class Connection():
     
     def calculateCost(self, fromNode, toNode):
         connectionLength = Vector2(fromNode[0], fromNode[1]) - Vector2(toNode[0], toNode[1])
-        return connectionLength.magnitudeSquared()
+        return connectionLength
     
 class Heuristic():
     def __init__(self, goalNode, ghosts):
@@ -37,9 +37,8 @@ class Heuristic():
         #for ghost in self.ghosts:
         #    connection = Vector2(fromNode[0], fromNode[1]) - ghost.position
         #    heuristic -= connection.magnitudeSquared()
-        value = heuristic(fromNode, self.goalNode)
-        print(value)
-        return value
+        #return heuristic
+        return heuristic(fromNode, self.goalNode)
 
 class PathfindingList():
     def __init__(self):
@@ -125,8 +124,9 @@ def a_star(nodes, startNode, endNode, heuristic):
                 # We can use the node’s old cost values to calculate
                 # its heuristic without calling the possibly expensive
                 # heuristic function.
-                connectionEndHeuristic = connectionEndRecord.estimatedTotalCost - connectionEndRecord.costSoFar
-
+                #connectionEndHeuristic = connectionEndRecord.estimatedTotalCost - connectionEndRecord.costSoFar
+                connectionEndHeuristic = heuristic.estimate(connectionEnd)
+                
             # Skip if the node is open and we’ve not found a better
             # route.
             elif open.contains(connectionEnd):
@@ -139,7 +139,8 @@ def a_star(nodes, startNode, endNode, heuristic):
                     continue
 
                 # Again, we can calculate its heuristic.
-                connectionEndHeuristic = connectionEndRecord.estimatedTotalCost - connectionEndRecord.costSoFar
+                #connectionEndHeuristic = connectionEndRecord.estimatedTotalCost - connectionEndRecord.costSoFar
+                connectionEndHeuristic = heuristic.estimate(connectionEnd)
 
             # Otherwise we know we’ve got an unvisited node, so make a
             # record for it.
@@ -183,7 +184,7 @@ def a_star(nodes, startNode, endNode, heuristic):
         
         # Work back along the path, accumulating connections.
         while current.node != startNode:
-            path.append(current.connection.toNode.node)
+            path.append(current.connection.getToNode().node)
             current = current.connection.getFromNode()
 
         # Reverse the path, and return it.
