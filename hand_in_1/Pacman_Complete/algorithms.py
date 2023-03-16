@@ -1,5 +1,7 @@
 import sys
 from vector import Vector2
+from pellets import DebugPellet
+from numpy import interp
 
 class NodeRecord():
     def __init__(self):
@@ -38,7 +40,7 @@ class Heuristic():
         #    connection = Vector2(fromNode[0], fromNode[1]) - ghost.position
         #    heuristic -= connection.magnitudeSquared()
         #return heuristic
-        return heuristic(fromNode, self.goalNode)
+        return heuristic(fromNode, self.goalNode, self.ghosts)
 
 class PathfindingList():
     def __init__(self):
@@ -244,12 +246,13 @@ def print_result(previous_nodes, shortest_path, start_node, target_node):
 
 #########
 # A*
-def heuristic(node1, node2):
+def heuristic(node1, goal, ghosts, debugPellets):
     # manhattan distance
-    return abs(node1[0] - node2[0]) + abs(node1[1] - node2[1])
+    manDistGoal = abs(node1[0] - goal[0]) + abs(node1[1] - goal[1])
+    return manDistGoal
 
 
-def dijkstra_or_a_star(nodes, start_node, a_star, goal):
+def dijkstra_or_a_star(nodes, start_node, a_star, goal, ghosts, debugPellets):
     # list of all nodes
     unvisited_nodes = list(nodes.costs)
     # dict with {"node"-"value of costSoFar + costOfBestEdges"} as key-value pair 
@@ -266,7 +269,7 @@ def dijkstra_or_a_star(nodes, start_node, a_star, goal):
         totalEstimatedCost[node] = max_value
     # initialise starting node
     shortest_path[start_node] = 0
-    totalEstimatedCost[start_node] = heuristic(start_node, goal)
+    totalEstimatedCost[start_node] = heuristic(start_node, goal, ghosts, debugPellets)
 
     # while there are still unvisited nodes:
     while unvisited_nodes:
@@ -300,7 +303,7 @@ def dijkstra_or_a_star(nodes, start_node, a_star, goal):
                     previous_nodes[neighbor] = current_min_node
                     # dont forget to update the heuristic dictionary if we are using A*
                     if a_star:
-                        totalEstimatedCost[neighbor] = tentative_value + heuristic(neighbor, goal)
+                        totalEstimatedCost[neighbor] = tentative_value + heuristic(neighbor, goal, ghosts, debugPellets)
  
         # After visiting its neighbors, we mark the node as "visited"
         unvisited_nodes.remove(current_min_node)

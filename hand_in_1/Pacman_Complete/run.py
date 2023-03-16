@@ -56,7 +56,7 @@ class GameController(object):
         self.pellets = PelletGroup(self.mazedata.obj.name+".txt")
         self.pacman = Pacman(self.nodes.getNodeFromTiles(*self.mazedata.obj.pacmanStart), self.nodes, self.pellets.pelletLUT, self.pellets.pelletList, self.nodes.edges)
         self.ghosts = GhostGroup(self.nodes.getStartTempNode(), self.pacman)
-        self.pacman.ghosts = self.ghosts
+        self.pacman.ghosts = self.ghosts.ghosts
 
         self.ghosts.pinky.setStartNode(self.nodes.getNodeFromTiles(*self.mazedata.obj.addOffset(2, 3)))
         self.ghosts.inky.setStartNode(self.nodes.getNodeFromTiles(*self.mazedata.obj.addOffset(0, 3)))
@@ -110,7 +110,7 @@ class GameController(object):
             if self.fruit is not None:
                 self.fruit.update(dt)
             self.checkPelletEvents()
-            #self.checkGhostEvents()
+            self.checkGhostEvents()
             self.checkFruitEvents()
 
         if self.pacman.alive:
@@ -254,7 +254,9 @@ class GameController(object):
         self.screen.blit(self.background, (0, 0))
         #self.nodes.render(self.screen)
         self.pellets.render(self.screen)
-        self.pacman.debugPellet.render(self.screen)
+        for element in self.pacman.debugPelletList:
+            element.render(self.screen)
+        self.pacman.debugPellet.render(self.screen) 
         if self.fruit is not None:
             self.fruit.render(self.screen)
         self.pacman.render(self.screen)

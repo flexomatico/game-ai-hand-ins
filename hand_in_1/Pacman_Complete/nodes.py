@@ -69,7 +69,7 @@ class NodeGroup(object):
             nodeLeftKey = None
             edgeHasPellets = False
             for col in list(range(data.shape[1])):
-                if data[row][col] in self.nodeSymbols:
+                if data[row][col] in ['+', 'P']:
                     if nodeLeftKey is None:
                         nodeLeftKey = self.constructKey(col+xoffset, row+yoffset)
                     elif edgeHasPellets:
@@ -88,7 +88,7 @@ class NodeGroup(object):
             nodeLeftKey = None
             edgeHasPellets = False
             for row in list(range(dataT.shape[1])):
-                if dataT[col][row] in self.nodeSymbols:
+                if dataT[col][row] in ['+', 'P']:
                     if nodeLeftKey is None:
                         nodeLeftKey = self.constructKey(col+xoffset, row+yoffset)
                     elif edgeHasPellets:

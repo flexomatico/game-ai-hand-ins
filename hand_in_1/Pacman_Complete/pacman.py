@@ -27,6 +27,8 @@ class Pacman(Entity):
         self.edges = edges
         self.goal = None
         self.tempDirection = LEFT
+        self.ghosts = None
+        self.debugPelletList = []
         # ==========================================
 
     def reset(self):
@@ -108,10 +110,11 @@ class Pacman(Entity):
         #closestEdge = self.findClosestEdgeBFS(self.nodes, lastPacmanNode)
         #closestEdge = self.findRandomEdge(self.nodes, lastPacmanNode, self.edges)
 
-        #path = a_star(self.nodes, lastPacmanNode, closestEdge, Heuristic(closestEdge, self.ghosts.ghosts))
+        #path = a_star(self.nodes, lastPacmanNode, closestEdge, Heuristic(closestEdge, self.ghosts))
         #return path
 
-        previous_nodes, shortest_path = dijkstra_or_a_star(self.nodes, lastPacmanNode, True, closestEdge)
+        self.debugPelletList = []
+        previous_nodes, shortest_path = dijkstra_or_a_star(self.nodes, lastPacmanNode, True, closestEdge, self.ghosts, self.debugPelletList)
         path = []
         #path.append(closestEdge.node2)
         node = closestEdge
@@ -129,7 +132,6 @@ class Pacman(Entity):
         pacmanTarget = self.nodes.getVectorFromLUTNode(pacmanTarget)
         nextPacmanTarget = path[0]
         ultimateTarget = path[len(path)-1]
-        print(len(path))
         self.debugPellet.position = Vector2(ultimateTarget[0], ultimateTarget[1])
         if pacmanTarget[0] > nextPacmanTarget[0] and 2 in directions : #left
             #print("LEFT")
@@ -174,15 +176,30 @@ class Pacman(Entity):
         closestEdge = None
         for key in edges:
             edge = edges[key]
-            if edge.node1 != start_node:
-                vec = Vector2(edge.node1[0], edge.node1[1]) - Vector2(start_node[0], start_node[1])
-                vecLength = vec.magnitudeSquared()
-                if vecLength < minDist:
-                    minDist = vecLength
-                    closestEdge = edges[key].node1
+            node1Vec = Vector2(edge.node1[0], edge.node1[1])
+            node2Vec = Vector2(edge.node2[0], edge.node2[1])
+            skipEdge = False
+            for ghost in self.ghosts:
+                targetNeighbor = ghost.target.neighbors[ghost.direction]
+                if ghost.target.position == node1Vec or ghost.target.position == node2Vec or ghost.node.position == node1Vec or ghost.node.position == node2Vec:
+                    skipEdge = True
+                elif targetNeighbor is not None:
+                    if targetNeighbor.position == node1Vec or targetNeighbor.position == node2Vec or targetNeighbor.position == node1Vec or targetNeighbor.position == node2Vec:
+                        skipEdge = True
+            if not skipEdge:
+                if edge.node1 != start_node:
+                    vec = Vector2(edge.node1[0], edge.node1[1]) - Vector2(start_node[0], start_node[1])
+                    vecLength = vec.magnitudeSquared()
+                    if vecLength < minDist:
+                        minDist = vecLength
+                        closestEdge = edges[key].node1
+                else:
+                    closestEdge = edge.node2
+                    break
             else:
-                closestEdge = edge.node2
-                break
+                skipEdge = False
+        if closestEdge is None:
+            closestEdge = self.findRandomEdge(nodes, start_node, edges)
         return closestEdge  
     
     def findRandomEdge(self, nodes, start_node, edges):
