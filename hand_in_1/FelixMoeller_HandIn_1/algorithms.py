@@ -249,7 +249,10 @@ def print_result(previous_nodes, shortest_path, start_node, target_node):
 def heuristic(node1, goal, ghosts, debugPellets):
     # manhattan distance
     manDistGoal = abs(node1[0] - goal[0]) + abs(node1[1] - goal[1])
-    return manDistGoal
+    manDistGhost = 100000
+    for ghost in ghosts:
+        manDistGhost -= abs(node1[0] - ghost.node.position.x) + abs(node1[1] - ghost.node.position.y)
+    return manDistGoal + manDistGhost
 
 
 def dijkstra_or_a_star(nodes, start_node, a_star, goal, ghosts, debugPellets):

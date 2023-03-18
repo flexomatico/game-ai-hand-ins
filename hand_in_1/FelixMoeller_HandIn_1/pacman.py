@@ -43,12 +43,14 @@ class Pacman(Entity):
         self.alive = False
         self.direction = STOP
 
-    def update(self, dt):	
+    def update(self, dt):    
+        if self.onCollisionCourseWithGhost():
+            self.reverseDirection()
+        
         self.sprites.update(dt)
         self.position += self.directions[self.direction]*self.speed*dt
         
         if self.overshotTarget():
-            #print(len(self.edges))
             if (self.node, self.target) in self.edges:
                 e = self.edges.pop((self.node, self.target))
             elif (self.target, self.node) in self.edges:
@@ -56,7 +58,8 @@ class Pacman(Entity):
             self.node = self.target
             directions = self.validDirections()
             self.tempDirection = self.directionMethod(directions)
-            # ==========================================
+            if self.ghostMovingToCurrentPosition():
+                self.tempDirection = self.optimalFleeingDirection(directions)
             if self.node.neighbors[PORTAL] is not None:
                 self.node = self.node.neighbors[PORTAL]
             self.target = self.getNewTarget(self.tempDirection)
@@ -174,6 +177,15 @@ class Pacman(Entity):
     def findClosestEdge(self, nodes, start_node, edges):
         minDist = sys.maxsize
         closestEdge = None
+
+        if len(edges) == 1:
+            for key in edges:
+                edge = edges[key]
+                if edge.node1 == start_node:
+                    return edge.node2
+                else:
+                    return edge.node1
+
         for key in edges:
             edge = edges[key]
             node1Vec = Vector2(edge.node1[0], edge.node1[1])
@@ -200,6 +212,7 @@ class Pacman(Entity):
                 skipEdge = False
         if closestEdge is None:
             closestEdge = self.findRandomEdge(nodes, start_node, edges)
+
         return closestEdge  
     
     def findRandomEdge(self, nodes, start_node, edges):
@@ -217,3 +230,31 @@ class Pacman(Entity):
         lengths.sort()
         closestEdge = edgesByDistance[lengths[len(lengths)-1]]
         return closestEdge.node1
+    
+    def ghostMovingToCurrentPosition(self):
+        for ghost in self.ghosts:
+            if ghost.target == self.node:
+                return True
+        return False
+    
+    def optimalFleeingDirection(self, directions):
+        tempDirections = copy.deepcopy(directions)
+        for ghost in self.ghosts:
+            if ghost.target == self.node:
+                if ghost.direction * -1 in tempDirections:
+                    tempDirections.remove(ghost.direction * -1)
+        if len(tempDirections) == 0:
+            return directions[0]
+        return tempDirections[0]
+
+    def onCollisionCourseWithGhost(self):
+        for ghost in self.ghosts:
+            #distNow = abs(self.position.x - ghost.position.y) + abs(self.position.x - ghost.position.y)
+            distNow = (self.position - ghost.position).magnitudeSquared()
+            nextPos = self.position + self.directions[self.direction]
+            #distNext = abs(nextPos.x - ghost.position.y) + abs(nextPos.x - ghost.position.y)
+            distNext = (nextPos - ghost.position).magnitudeSquared()
+
+            if distNow < 3000 and distNext < distNow:
+                return True
+            return False
