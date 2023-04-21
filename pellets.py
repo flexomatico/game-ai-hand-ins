@@ -12,7 +12,6 @@ class Pellet(object):
         self.collideRadius = 2 * TILEWIDTH / 16
         self.points = 10
         self.visible = True
-        self.neighbors = {UP:None, DOWN:None, LEFT:None, RIGHT:None}
         
     def render(self, screen):
         if self.visible:
@@ -20,11 +19,6 @@ class Pellet(object):
             p = self.position + adjust
             pygame.draw.circle(screen, self.color, p.asInt(), self.radius)
 
-class DebugPellet(Pellet):
-    def __init__(self, row, column):
-        Pellet.__init__(self, row, column)
-        self.color = RED
-        self.radius = int(10 * TILEWIDTH/16)
 
 class PowerPellet(Pellet):
     def __init__(self, row, column):
@@ -44,7 +38,6 @@ class PowerPellet(Pellet):
 
 class PelletGroup(object):
     def __init__(self, pelletfile):
-        self.pelletLUT = {}
         self.pelletList = []
         self.powerpellets = []
         self.createPelletList(pelletfile)
@@ -59,15 +52,11 @@ class PelletGroup(object):
         for row in range(data.shape[0]):
             for col in range(data.shape[1]):
                 if data[row][col] in ['.', '+']:
-                    pellet = Pellet(row, col)
-                    self.pelletList.append(pellet)
-                    self.pelletLUT[(pellet.position.x, pellet.position.y)] = pellet
+                    self.pelletList.append(Pellet(row, col))
                 elif data[row][col] in ['P', 'p']:
                     pp = PowerPellet(row, col)
                     self.pelletList.append(pp)
                     self.powerpellets.append(pp)
-                    self.pelletLUT[(pp.position.x, pp.position.y)] = pp
-        return data
                     
     def readPelletfile(self, textfile):
         return np.loadtxt(textfile, dtype='<U1')

@@ -26,18 +26,13 @@ class Node(object):
                 line_start = self.position.asTuple()
                 line_end = self.neighbors[n].position.asTuple()
                 pygame.draw.line(screen, WHITE, line_start, line_end, 4)
-                pygame.draw.circle(screen, RED, self.position.asInt(), 12)
+                pygame.draw.circle(screen, RED, self.position.asInt(), 5)
 
-class Edge(object):
-    def __init__(self, node1, node2):
-        self.node1 = node1
-        self.node2 = node2
 
 class NodeGroup(object):
     def __init__(self, level):
         self.level = level
         self.nodesLUT = {}
-        self.edges = {}
         self.nodeSymbols = ['+', 'P', 'n']
         self.pathSymbols = ['.', '-', '|', 'p']
         data = self.readMazeFile(level)
@@ -45,11 +40,6 @@ class NodeGroup(object):
         self.connectHorizontally(data)
         self.connectVertically(data)
         self.homekey = None
-        # ======= HAND IN 1 MODIFICATION ===========
-        self.costs = self.get_nodes()
-        self.createHorizontalEdges(data)
-        self.createVerticalEdges(data)
-        # ==========================================
 
     def readMazeFile(self, textfile):
         return np.loadtxt(textfile, dtype='<U1')
@@ -63,43 +53,6 @@ class NodeGroup(object):
 
     def constructKey(self, x, y):
         return x * TILEWIDTH, y * TILEHEIGHT
-    
-    def createHorizontalEdges(self, data, xoffset=0, yoffset=0):
-        for row in list(range(data.shape[0])):
-            nodeLeftKey = None
-            edgeHasPellets = False
-            for col in list(range(data.shape[1])):
-                if data[row][col] in ['+', 'P']:
-                    if nodeLeftKey is None:
-                        nodeLeftKey = self.constructKey(col+xoffset, row+yoffset)
-                    elif edgeHasPellets:
-                        nodeRightKey = self.constructKey(col+xoffset, row+yoffset)
-                        self.edges[(self.nodesLUT[nodeLeftKey], self.nodesLUT[nodeRightKey])] = Edge(nodeLeftKey, nodeRightKey)
-                        edgeHasPellets = False
-                        nodeLeftKey = self.constructKey(col+xoffset, row+yoffset)
-                    else:
-                        nodeLeftKey = self.constructKey(col+xoffset, row+yoffset)
-                elif data[row][col] in ['.']:
-                        edgeHasPellets = True
-
-    def createVerticalEdges(self, data, xoffset=0, yoffset=0):
-        dataT = data.transpose()
-        for col in list(range(dataT.shape[0])):
-            nodeLeftKey = None
-            edgeHasPellets = False
-            for row in list(range(dataT.shape[1])):
-                if dataT[col][row] in ['+', 'P']:
-                    if nodeLeftKey is None:
-                        nodeLeftKey = self.constructKey(col+xoffset, row+yoffset)
-                    elif edgeHasPellets:
-                        nodeRightKey = self.constructKey(col+xoffset, row+yoffset)
-                        self.edges[(self.nodesLUT[nodeLeftKey], self.nodesLUT[nodeRightKey])] = Edge(nodeLeftKey, nodeRightKey)
-                        edgeHasPellets = False
-                        nodeLeftKey = self.constructKey(col+xoffset, row+yoffset)
-                    else:
-                        nodeLeftKey = self.constructKey(col+xoffset, row+yoffset)
-                elif dataT[col][row] in ['.']:
-                        edgeHasPellets = True
 
 
     def connectHorizontally(self, data, xoffset=0, yoffset=0):
@@ -113,7 +66,6 @@ class NodeGroup(object):
                         otherkey = self.constructKey(col+xoffset, row+yoffset)
                         self.nodesLUT[key].neighbors[RIGHT] = self.nodesLUT[otherkey]
                         self.nodesLUT[otherkey].neighbors[LEFT] = self.nodesLUT[key]
-                        #self.edges[(self.nodesLUT[key], self.nodesLUT[otherkey])] = Edge(key, otherkey)
                         key = otherkey
                 elif data[row][col] not in self.pathSymbols:
                     key = None
@@ -130,7 +82,6 @@ class NodeGroup(object):
                         otherkey = self.constructKey(col+xoffset, row+yoffset)
                         self.nodesLUT[key].neighbors[DOWN] = self.nodesLUT[otherkey]
                         self.nodesLUT[otherkey].neighbors[UP] = self.nodesLUT[key]
-                        #self.edges[(self.nodesLUT[key], self.nodesLUT[otherkey])] = Edge(key, otherkey)
                         key = otherkey
                 elif dataT[col][row] not in self.pathSymbols:
                     key = None
@@ -211,49 +162,3 @@ class NodeGroup(object):
     def render(self, screen):
         for node in self.nodesLUT.values():
             node.render(screen)
-
-            #############################
-    # returns a list of all nodes in (x,y) format
-    def getListOfNodesVector(self):
-        return list(self.nodesLUT)
-
-    # returns a node in (x,y) format
-    def getVectorFromLUTNode(self, node):
-        id = list(self.nodesLUT.values()).index(node)
-        listOfVectors = self.getListOfNodesVector()
-        return listOfVectors[id]
-
-    # returns neighbors of a node in LUT form
-    def getNeighborsObj(self, node):
-        node_obj = self.getNodeFromPixels(node[0], node[1])
-        return node_obj.neighbors
-
-    # returns neighbors in (x,y) format
-    def getNeighbors(self, node):
-        neighs_LUT = self.getNeighborsObj(node)
-        vals = neighs_LUT.values()
-        neighs_LUT2 = []
-        for direction in vals:
-            if not direction is None:
-                neighs_LUT2.append(direction)
-        list_neighs = []
-        for neigh in neighs_LUT2:
-            list_neighs.append(self.getVectorFromLUTNode(neigh))
-        return list_neighs
-
-    # used to initialize node system for Dijkstra algorithm
-    def get_nodes(self):
-        costs_dict = {}
-        listOfNodesPixels = self.getListOfNodesVector()
-        for node in listOfNodesPixels:
-            neigh = self.getNeighborsObj(node)
-            temp_neighs = neigh.values()
-            temp_list = []
-            for direction in temp_neighs:
-                if not direction is None:
-                    temp_list.append(1)
-                else:
-                    temp_list.append(None)
-            costs_dict[node] = temp_list
-        #print(costs_dict)
-        return costs_dict

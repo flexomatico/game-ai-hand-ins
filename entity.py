@@ -81,8 +81,6 @@ class Entity(object):
             if self.validDirection(key):
                 if key != self.direction * -1:
                     directions.append(key)
-                elif self.name is PACMAN:
-                   directions.append(key)
         if len(directions) == 0:
             directions.append(self.direction * -1)
         return directions
