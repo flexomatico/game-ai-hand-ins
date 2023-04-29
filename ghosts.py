@@ -47,18 +47,18 @@ class Ghost(Entity):
     def startSpawn(self):
         self.mode.setSpawnMode()
         if self.mode.current == SPAWN:
-            self.setSpeed(150)
+            self.setSpeed(150 * GAMESPEED)
             self.directionMethod = self.goalDirection
             self.spawn()
 
     def startFreight(self):
         self.mode.setFreightMode()
         if self.mode.current == FREIGHT:
-            self.setSpeed(50)
+            self.setSpeed(50 * GAMESPEED)
             self.directionMethod = self.randomDirection         
 
     def normalMode(self):
-        self.setSpeed(100)
+        self.setSpeed(100 * GAMESPEED)
         self.directionMethod = self.goalDirection
         self.homeNode.denyAccess(DOWN, self)
 
@@ -125,10 +125,17 @@ class Clyde(Ghost):
 class GhostGroup(object):
     def __init__(self, node, pacman):
         self.blinky = Blinky(node, pacman)
-        self.pinky = Pinky(node, pacman)
-        self.inky = Inky(node, pacman, self.blinky)
-        self.clyde = Clyde(node, pacman)
-        self.ghosts = [self.blinky, self.pinky, self.inky, self.clyde]
+        self.ghosts = [self.blinky]
+        if(NUMGHOSTS > 1):
+            self.pinky = Pinky(node, pacman)
+            self.ghosts.append(self.pinky)
+        if(NUMGHOSTS > 2):
+            self.inky = Inky(node, pacman, self.blinky)
+            self.ghosts.append(self.inky)
+        if(NUMGHOSTS > 3):
+            self.clyde = Clyde(node, pacman)
+            self.ghosts.append(self.clyde)
+        # self.ghosts = [self.blinky, self.pinky, self.inky, self.clyde]
 
     def __iter__(self):
         return iter(self.ghosts)

@@ -22,6 +22,7 @@ class GameController(object):
         self.background_norm = None
         self.background_flash = None
         self.clock = pygame.time.Clock()
+        self.ticks = 0
         self.fruit = None
         self.pause = Pause(True)
         self.level = 0
@@ -58,16 +59,16 @@ class GameController(object):
         self.pellets = PelletGroup(self.mazedata.obj.name+".txt")
         self.ghosts = GhostGroup(self.nodes.getStartTempNode(), self.pacman)
 
-        self.ghosts.pinky.setStartNode(self.nodes.getNodeFromTiles(*self.mazedata.obj.addOffset(2, 3)))
-        self.ghosts.inky.setStartNode(self.nodes.getNodeFromTiles(*self.mazedata.obj.addOffset(0, 3)))
-        self.ghosts.clyde.setStartNode(self.nodes.getNodeFromTiles(*self.mazedata.obj.addOffset(4, 3)))
-        self.ghosts.setSpawnNode(self.nodes.getNodeFromTiles(*self.mazedata.obj.addOffset(2, 3)))
         self.ghosts.blinky.setStartNode(self.nodes.getNodeFromTiles(*self.mazedata.obj.addOffset(2, 0)))
+        if(NUMGHOSTS > 1): self.ghosts.pinky.setStartNode(self.nodes.getNodeFromTiles(*self.mazedata.obj.addOffset(2, 3)))
+        if(NUMGHOSTS > 2): self.ghosts.inky.setStartNode(self.nodes.getNodeFromTiles(*self.mazedata.obj.addOffset(0, 3)))
+        if(NUMGHOSTS > 3): self.ghosts.clyde.setStartNode(self.nodes.getNodeFromTiles(*self.mazedata.obj.addOffset(4, 3)))
+        self.ghosts.setSpawnNode(self.nodes.getNodeFromTiles(*self.mazedata.obj.addOffset(2, 3)))
 
         self.nodes.denyHomeAccess(self.pacman)
         self.nodes.denyHomeAccessList(self.ghosts)
-        self.ghosts.inky.startNode.denyAccess(RIGHT, self.ghosts.inky)
-        self.ghosts.clyde.startNode.denyAccess(LEFT, self.ghosts.clyde)
+        if(NUMGHOSTS > 2): self.ghosts.inky.startNode.denyAccess(RIGHT, self.ghosts.inky)
+        if(NUMGHOSTS > 3): self.ghosts.clyde.startNode.denyAccess(LEFT, self.ghosts.clyde)
         self.mazedata.obj.denyGhostsAccess(self.ghosts, self.nodes)
 
     def startGame_old(self):      
@@ -158,9 +159,9 @@ class GameController(object):
             self.pellets.numEaten += 1
             self.updateScore(pellet.points)
             if self.pellets.numEaten == 30:
-                self.ghosts.inky.startNode.allowAccess(RIGHT, self.ghosts.inky)
+                if(NUMGHOSTS > 2): self.ghosts.inky.startNode.allowAccess(RIGHT, self.ghosts.inky)
             if self.pellets.numEaten == 70:
-                self.ghosts.clyde.startNode.allowAccess(LEFT, self.ghosts.clyde)
+                if(NUMGHOSTS > 3): self.ghosts.clyde.startNode.allowAccess(LEFT, self.ghosts.clyde)
             self.pellets.pelletList.remove(pellet)
             if pellet.name == POWERPELLET:
                 self.ghosts.startFreight()
@@ -191,7 +192,10 @@ class GameController(object):
                             self.textgroup.showText(GAMEOVERTXT)
                             self.pause.setPause(pauseTime=3, func=self.restartGame)
                         else:
-                            self.pause.setPause(pauseTime=3, func=self.resetLevel)
+                            if TRAINING:
+                                self.resetLevel()
+                            else:
+                                self.pause.setPause(pauseTime=3, func=self.resetLevel)
     
     def checkFruitEvents(self):
         if self.pellets.numEaten == 50 or self.pellets.numEaten == 140:

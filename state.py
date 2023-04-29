@@ -138,6 +138,6 @@ if __name__ == "__main__":
 
     # DEMO
     demo_p1 = Player("demo", exploration_rho=0, lr_alpha=0)
-    demo_p1.loadPolicy("trained_controller")
+    demo_p1.loadPolicy("trained_controller_2500")
     stDemo = State(demo_p1)
     stDemo.play()
