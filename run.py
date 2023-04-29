@@ -102,7 +102,10 @@ class GameController(object):
         
 
     def update(self):
-        dt = self.clock.tick(30) / 1000.0
+        totalTicks = pygame.time.get_ticks()
+        dt = (totalTicks - self.ticks) / 1000.0
+        self.ticks = totalTicks
+        # print(dt)
         self.textgroup.update(dt)
         self.pellets.update(dt)
         if not self.pause.paused:
