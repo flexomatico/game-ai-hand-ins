@@ -75,7 +75,7 @@ class State:
         for i in range(iterations):
             if i % 1000 == 0:
                 print("Iterations {}".format(i))
-            if i % 500 == 0:
+            if i % 1 == 0:
                 p1.savePolicy()
             game = GameController()
             game.startGame()
@@ -138,6 +138,6 @@ if __name__ == "__main__":
 
     # DEMO
     demo_p1 = Player("demo", exploration_rho=0, lr_alpha=0)
-    demo_p1.loadPolicy("trained_controller_2500_backup")
+    demo_p1.loadPolicy("trained_controller")
     stDemo = State(demo_p1)
     stDemo.play()
