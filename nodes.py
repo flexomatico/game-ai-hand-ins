@@ -23,7 +23,7 @@ class Node(object):
     def render(self, screen):
         for n in self.neighbors.keys():
             if self.neighbors[n] is not None:
-               adjust = Vector2(TILEWIDTH, TILEHEIGHT) / 2
+                adjust = Vector2(TILEWIDTH, TILEHEIGHT) / 2
                 line_start = (self.position + adjust).asTuple()
                 line_end = (self.neighbors[n].position + adjust).asTuple()
                 pygame.draw.line(screen, WHITE, line_start, line_end, 4)
