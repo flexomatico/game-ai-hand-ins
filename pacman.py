@@ -34,6 +34,7 @@ class Pacman(Entity):
         # direction = self.getValidKey()
         direction = self.getDirection()
         if self.overshotTarget():
+            # print("Overshot target")
             self.node = self.target
             if self.node.neighbors[PORTAL] is not None:
                 self.node = self.node.neighbors[PORTAL]
