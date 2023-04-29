@@ -1,6 +1,6 @@
 import pickle
 import numpy as np
-import random 
+import random
 from Counter import Counter
 
 class Player:
@@ -19,6 +19,9 @@ class Player:
         self.lastState = []
         # last action
         self.lastAction = []
+
+        # debug training counter
+        self.trainingIterations = 0
 
     # Get Q(s,a).
     def getQValue(self, state, action):
@@ -97,6 +100,10 @@ class Player:
         fw = open('trained_controller', 'wb')
         pickle.dump(self.states_value, fw)
         fw.close()
+
+        self.trainingIterations += 1
+        with open('training_log.txt', 'w') as f:
+            f.write("Completed Training Iterations: " + str(self.trainingIterations))
 
     # Loads a Q-table.
     def loadPolicy(self, file):
