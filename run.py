@@ -106,7 +106,7 @@ class GameController(object):
         totalTicks = pygame.time.get_ticks()
         dt = (totalTicks - self.ticks) / 1000.0
         self.ticks = totalTicks
-        # print(dt)
+        if DEBUG: print(dt)
         self.textgroup.update(dt)
         self.pellets.update(dt)
         if not self.pause.paused:
@@ -136,7 +136,7 @@ class GameController(object):
         if afterPauseMethod is not None:
             afterPauseMethod()
         self.checkEvents()
-        self.render()
+        if RENDER: self.render()
 
     def checkEvents(self):
         for event in pygame.event.get():
@@ -258,7 +258,7 @@ class GameController(object):
 
     def render(self):
         self.screen.blit(self.background, (0, 0))
-        self.nodes.render(self.screen)
+        if DEBUG: self.nodes.render(self.screen)
         self.pellets.render(self.screen)
         if self.fruit is not None:
             self.fruit.render(self.screen)
