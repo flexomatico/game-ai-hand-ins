@@ -103,9 +103,12 @@ class GameController(object):
         
 
     def update(self):
-        totalTicks = pygame.time.get_ticks()
-        dt = (totalTicks - self.ticks) / 1000.0
-        self.ticks = totalTicks
+        if USETRUEDT:
+            totalTicks = pygame.time.get_ticks()
+            dt = ((totalTicks - self.ticks) / 1000.0) * GAMESPEED
+            self.ticks = totalTicks
+        else: 
+            dt = DELTATIME
         if DEBUG: print(dt)
         self.textgroup.update(dt)
         self.pellets.update(dt)
@@ -201,7 +204,7 @@ class GameController(object):
         if self.pellets.numEaten == 50 or self.pellets.numEaten == 140:
             if self.fruit is None:
                 self.fruit = Fruit(self.nodes.getNodeFromTiles(9, 20), self.level)
-                print(self.fruit)
+                # print(self.fruit)
         if self.fruit is not None:
             if self.pacman.collideCheck(self.fruit):
                 self.updateScore(self.fruit.points)
