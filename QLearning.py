@@ -11,7 +11,7 @@ class QValueStore:
         self.qStore = {}
 
     def constructKey(self, state, action):
-        key = str(state.ghostDirection) + str(state.pelletDirection) + str(state.availableActions) + str(action)
+        key = str(state.ghostDirection) + str(state.pelletDirection) + str(state.availableActions) + str(state.isInFreight) + str(action)
         return key
 
     def getQValue(self, state, action):
@@ -42,11 +42,13 @@ class ReinforcementProblem:
         #     pacmanNode = random.choice(list(self.nodeGroup.nodesLUT.values()))
         nodeKeys = list(self.nodeGroup.nodesLUT.keys())
         pacmanNode = self.nodeGroup.nodesLUT[nodeKeys[iteration % len(nodeKeys)]]
-        randomState = State(pacmanNode, None, None, None)
+        randomState = State(pacmanNode, None, None, None, None, None)
         availableActions = self.getAvailableActions(randomState)
         randomState.ghostDirection = random.choice(availableActions)
         randomState.pelletDirection = random.choice(availableActions)
         randomState.availableActions = availableActions
+        randomState.isInFreight = random.choice([True, False])
+        randomState.closestGhostDistance = random.choice([10, 300])
         return randomState
         
 
@@ -65,11 +67,14 @@ class ReinforcementProblem:
         
         reward = 0
         if state.ghostDirection == action:
-            reward -= 5
-        # if state.ghostDirection != action:
-        #     reward += 1
+            if state.isInFreight:
+                reward += 8 
+            elif state.closestGhostDistance < 50:
+                reward -= 7
+            # elif state.closestGhostDistance >= 50:
+            #     reward -= 1
         if state.pelletDirection == action:
-            reward += 4
+            reward += 5
 
         return reward, newState
         
@@ -152,7 +157,7 @@ if __name__ == "__main__":
     # number of iterations that will be carried out in a sequence of connected actions.
     
     rho=0.3
-    alpha=1.0
+    alpha=0.7
     gamma=0
     nu = 1.0    # Always pick a random state for a new iteration
 
@@ -160,14 +165,14 @@ if __name__ == "__main__":
         problem = ReinforcementProblem()
         qLearner = QLearner()
         qLearner.QLearning(problem, alpha, gamma, rho, nu)
-    else:
-        qLearner = QLearner()
-        loadedStore = qLearner.loadPolicy("felixController")
-        qLearner.store.qStore = loadedStore
+    # else:
+    #     qLearner = QLearner()
+    #     loadedStore = qLearner.loadPolicy("felixController")
+    #     qLearner.store.qStore = loadedStore
         game = GameController()
         game.startGame()
-        for q in loadedStore.keys():
-            print(q)
+        # for q in loadedStore.keys():
+        #     print(q)
         # print(len(loadedStore.keys()))
         game.pacman.qValueStore = qLearner.store
         game.update()

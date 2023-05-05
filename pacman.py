@@ -43,15 +43,17 @@ class Pacman(Entity):
             if self.node.neighbors[PORTAL] is not None:
                 self.node = self.node.neighbors[PORTAL]
             
-            closestPellet = self.getClosestEntity(self.pelletList)
-            closestGhost = self.getClosestEntity(self.ghosts)
+            pelletDistance, closestPellet = self.getClosestEntity(self.pelletList)
+            ghostDistance, closestGhost = self.getClosestEntity(self.ghosts)
+            print(ghostDistance)
             # closestPelletDirection = self.findEntityDirection(self.node, closestPellet)
             # closestGhostDirection = self.findEntityDirection(self.node, closestGhost)
             self.goal = closestPellet.position
             closestPelletDirection = self.goalDirection(self.validDirections())
             self.goal = closestGhost.position
             closestGhostDirection = self.goalDirection(self.validDirections())
-            state = State(self.node, closestGhostDirection, closestPelletDirection, self.validDirections())
+            isInFreight = closestGhost.mode.current == FREIGHT or closestGhost.mode.current == SPAWN
+            state = State(self.node, closestGhostDirection, closestPelletDirection, self.validDirections(), isInFreight, ghostDistance)
             self.direction = self.qValueStore.getBestAction(state)
 
             self.target = self.getNewTarget(self.direction)
@@ -99,14 +101,13 @@ class Pacman(Entity):
         minDistance = sys.maxsize
         closestEntity = None
         for entity in entityList:
-            entityDistance = (entity.position - self.node.position).magnitudeSquared()
+            entityDistance = (entity.position - self.node.position).magnitude()
 
             if entityDistance < minDistance:
                 minDistance = entityDistance
                 closestEntity = entity
         
-        # closestEntity.color = RED
-        return closestEntity
+        return minDistance, closestEntity
 
     def findEntityDirection(self, node, entity):
         xDistance = abs(entity.position.x - node.position.x)
