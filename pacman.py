@@ -45,9 +45,13 @@ class Pacman(Entity):
             
             closestPellet = self.getClosestEntity(self.pelletList)
             closestGhost = self.getClosestEntity(self.ghosts)
-            closestPelletDirection = self.findEntityDirection(self.node, closestPellet)
-            closestGhostDirection = self.findEntityDirection(self.node, closestGhost)
-            state = State(self.node, closestGhostDirection, closestPelletDirection)
+            # closestPelletDirection = self.findEntityDirection(self.node, closestPellet)
+            # closestGhostDirection = self.findEntityDirection(self.node, closestGhost)
+            self.goal = closestPellet.position
+            closestPelletDirection = self.goalDirection(self.validDirections())
+            self.goal = closestGhost.position
+            closestGhostDirection = self.goalDirection(self.validDirections())
+            state = State(self.node, closestGhostDirection, closestPelletDirection, self.validDirections())
             self.direction = self.qValueStore.getBestAction(state)
 
             self.target = self.getNewTarget(self.direction)
@@ -95,10 +99,7 @@ class Pacman(Entity):
         minDistance = sys.maxsize
         closestEntity = None
         for entity in entityList:
-            try:
-                entityDistance = (entity.target.position - self.node.position).magnitudeSquared()
-            except:
-                entityDistance = (entity.position - self.node.position).magnitudeSquared()
+            entityDistance = (entity.position - self.node.position).magnitudeSquared()
 
             if entityDistance < minDistance:
                 minDistance = entityDistance
