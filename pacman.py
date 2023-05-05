@@ -4,18 +4,21 @@ from vector import Vector2
 from constants import *
 from entity import Entity
 from sprites import PacmanSprites
-from QLearning import State, QValueStore
+from state import State
+import sys
 
 class Pacman(Entity):
-    def __init__(self, node):
-        Entity.__init__(self, node )
+    def __init__(self, node, pelletList):
+        Entity.__init__(self, node)
         self.name = PACMAN    
         self.color = YELLOW
         self.direction = LEFT
         self.setBetweenNodes(LEFT)
         self.alive = True
         self.sprites = PacmanSprites(self)
-        self.learntDirection = STOP
+        self.pelletList = pelletList
+        self.ghosts = None
+        self.qValueStore = None
 
     def reset(self):
         Entity.reset(self)
@@ -33,26 +36,28 @@ class Pacman(Entity):
         self.sprites.update(dt)
         self.position += self.directions[self.direction]*self.speed*dt
         # direction = self.getValidKey()
-        direction = self.getDirection()
+        # direction = self.getDirection()
         if self.overshotTarget():
             # print("Overshot target")
             self.node = self.target
             if self.node.neighbors[PORTAL] is not None:
                 self.node = self.node.neighbors[PORTAL]
             
-            closestPelletNode = self.getClosestPellet()
-            closestGhostNode= self.getClosestGhost()
-            closestPelletDirection = self.findEntityDirection
-            state = State(self.node, )
+            closestPellet = self.getClosestEntity(self.pelletList)
+            closestGhost = self.getClosestEntity(self.ghosts)
+            closestPelletDirection = self.findEntityDirection(self.node, closestPellet)
+            closestGhostDirection = self.findEntityDirection(self.node, closestGhost)
+            state = State(self.node, closestGhostDirection, closestPelletDirection)
+            self.direction = self.qValueStore.getBestAction(state)
 
-            self.target = self.getNewTarget(direction)
+            self.target = self.getNewTarget(self.direction)
 
             if self.target is self.node:
                 self.direction = STOP
             self.setPosition()
-        else: 
-            if self.oppositeDirection(direction):
-                self.reverseDirection()
+        # else: 
+        #     if self.oppositeDirection(direction):
+        #         self.reverseDirection()
 
     def getDirection(self):
         return self.learntDirection 
@@ -86,11 +91,21 @@ class Pacman(Entity):
             return True
         return False
 
-    def getClosestPellet(self):
-        pass
+    def getClosestEntity(self, entityList):
+        minDistance = sys.maxsize
+        closestEntity = None
+        for entity in entityList:
+            try:
+                entityDistance = (entity.target.position - self.node.position).magnitudeSquared()
+            except:
+                entityDistance = (entity.position - self.node.position).magnitudeSquared()
 
-    def getClosestGhot(self):
-        pass
+            if entityDistance < minDistance:
+                minDistance = entityDistance
+                closestEntity = entity
+        
+        # closestEntity.color = RED
+        return closestEntity
 
     def findEntityDirection(self, node, entity):
         xDistance = abs(entity.position.x - node.position.x)

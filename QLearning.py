@@ -3,23 +3,22 @@ from constants import *
 import random
 import pickle
 from run import GameController
-
-class State:
-    def __init__(self, pacmanNode, ghostDirection, pelletDirection):
-        self.pacmanNode = pacmanNode
-        self.ghostDirection = ghostDirection
-        self.pelletDirection = pelletDirection
+from state import State
+import sys
 
 class QValueStore:
-    def __init__(self, fromFile=None):
+    def __init__(self):
         self.qStore = {}
-        if fromFile is not None:
-            self.qStore = fromFile
+
+    def constructKey(self, state, action):
+        key = str(state.ghostDirection) + str(state.pelletDirection) + str(action)
+        return key
 
     def getQValue(self, state, action):
-        if str([state, action]) not in self.qStore.keys():
-                self.storeQValue(state, action, 0)
-        return self.qStore[str([state, action])]
+        key = self.constructKey(state, action)
+        if key not in self.qStore.keys():
+                self.storeQValue(state, action, -100)
+        return self.qStore[key]
 
     def getBestAction(self, state):
         actions = [LEFT, UP, RIGHT, DOWN]
@@ -29,7 +28,8 @@ class QValueStore:
         return max(result, key=result.get)
 
     def storeQValue(self, state, action, value):
-        self.qStore[str([state, action])] = value
+        key = self.constructKey(state, action)
+        self.qStore[key] = value
 
 class ReinforcementProblem:
     def __init__(self):
@@ -41,8 +41,8 @@ class ReinforcementProblem:
         while(pacmanNode == None):
             pacmanNode = random.choice(list(self.nodeGroup.nodesLUT.values()))
         randomState = State(pacmanNode, None, None)
-        randomState.ghostDirection = self.getAvailableActions(randomState)
-        randomState.pelletDirection = self.getAvailableActions(randomState)
+        randomState.ghostDirection = random.choice(self.getAvailableActions(randomState))
+        randomState.pelletDirection = random.choice(self.getAvailableActions(randomState))
         return randomState
         
 
@@ -66,9 +66,11 @@ class ReinforcementProblem:
         
         reward = 0
         if state.ghostDirection == action:
-            reward = -1.0
+            reward -= 1
+        if state.ghostDirection == action * -1:
+            reward += 0.3
         if state.pelletDirection == action:
-            reward = 0.5
+            reward += 0.7
 
         return reward, newState
         
@@ -122,7 +124,7 @@ class QLearner:
     def savePolicy(self, iterations):
         fileName = "felixController"
         fw = open(fileName, 'wb')
-        pickle.dump(self.store, fw)
+        pickle.dump(self.store.qStore, fw)
         fw.close()
 
         with open('training_log.txt', 'w') as f:
@@ -132,9 +134,9 @@ class QLearner:
     # Loads a Q-table.
     def loadPolicy(self, file):
         fr = open(file, 'rb')
-        self.store = pickle.load(fr)
+        self.store.qStore = pickle.load(fr)
         fr.close()
-        return self.store
+        return self.store.qStore
 
 if __name__ == "__main__":
     #### PARAMETERS:
@@ -161,9 +163,13 @@ if __name__ == "__main__":
         qLearner.QLearning(problem, alpha, gamma, rho, nu)
     else:
         qLearner = QLearner()
-        qValueStore = qLearner.loadPolicy("felixController")
+        loadedStore = qLearner.loadPolicy("felixController")
+        qLearner.store.qStore = loadedStore
         game = GameController()
         game.startGame()
+        # for q in loadedStore.keys():
+        #     print(q)
+        game.pacman.qValueStore = qLearner.store
         game.update()
         while True:
             game.update()

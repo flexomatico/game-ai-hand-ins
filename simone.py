@@ -223,7 +223,7 @@ class Pacman(Entity):
             maxQ = self.qValues[newKey]
 
             # Perform the q learning.
-            Q = (1 - ALPHA) * Q + ALPHA * (reward + GAMMA * maxQ)
+            Q = (1 - alpha) * Q + ALPHA * (reward + GAMMA * maxQ)
 
             # Store the new Q-value.
             self.qValues[key] = Q
