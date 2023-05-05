@@ -4,6 +4,7 @@ from vector import Vector2
 from constants import *
 from entity import Entity
 from sprites import PacmanSprites
+from QLearning import State, QValueStore
 
 class Pacman(Entity):
     def __init__(self, node):
@@ -38,11 +39,13 @@ class Pacman(Entity):
             self.node = self.target
             if self.node.neighbors[PORTAL] is not None:
                 self.node = self.node.neighbors[PORTAL]
+            
+            closestPelletNode = self.getClosestPellet()
+            closestGhostNode= self.getClosestGhost()
+            closestPelletDirection = self.findEntityDirection
+            state = State(self.node, )
+
             self.target = self.getNewTarget(direction)
-            if self.target is not self.node:
-                self.direction = direction
-            else:
-                self.target = self.getNewTarget(self.direction)
 
             if self.target is self.node:
                 self.direction = STOP
@@ -82,3 +85,26 @@ class Pacman(Entity):
         if dSquared <= rSquared:
             return True
         return False
+
+    def getClosestPellet(self):
+        pass
+
+    def getClosestGhot(self):
+        pass
+
+    def findEntityDirection(self, node, entity):
+        xDistance = abs(entity.position.x - node.position.x)
+        yDistance = abs(entity.position.y - node.position.y)
+
+        if(xDistance > yDistance):
+            if(entity.position.x > node.position.x):
+                direction = RIGHT
+            else:
+                direction = LEFT   
+        else:
+            if(entity.position.y > node.position.y):
+                direction = DOWN
+            else:
+                direction = UP
+
+        return direction
