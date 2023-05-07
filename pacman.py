@@ -45,7 +45,7 @@ class Pacman(Entity):
             
             pelletDistance, closestPellet = self.getClosestEntity(self.pelletList)
             ghostDistance, closestGhost = self.getClosestEntity(self.ghosts)
-            print(ghostDistance)
+            # print(ghostDistance)
             # closestPelletDirection = self.findEntityDirection(self.node, closestPellet)
             # closestGhostDirection = self.findEntityDirection(self.node, closestGhost)
             self.goal = closestPellet.position

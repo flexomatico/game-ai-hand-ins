@@ -69,8 +69,10 @@ class ReinforcementProblem:
         if state.ghostDirection == action:
             if state.isInFreight:
                 reward += 8 
-            elif state.closestGhostDistance < 50:
-                reward -= 7
+            else:
+                reward -= 6
+            # elif state.closestGhostDistance < 50:
+            #     reward -= 7
             # elif state.closestGhostDistance >= 50:
             #     reward -= 1
         if state.pelletDirection == action:
