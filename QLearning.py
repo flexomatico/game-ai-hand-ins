@@ -11,7 +11,7 @@ class QValueStore:
         self.qStore = {}
 
     def constructKey(self, state, action):
-        key = str(state.ghostDirection) + str(state.pelletDirection) + str(state.availableActions) + str(state.isInFreight) + str(action)
+        key = str(state.ghostDirections) + str(state.pelletDirection) + str(state.availableActions) + str(state.isInFreight) + str(state.closestGhost) + str(action)
         return key
 
     def getQValue(self, state, action):
@@ -37,18 +37,19 @@ class ReinforcementProblem:
 
     # Choose a random starting state for the problem.
     def getRandomState(self, iteration):
-        # pacmanNode = None
-        # while(pacmanNode == None):
-        #     pacmanNode = random.choice(list(self.nodeGroup.nodesLUT.values()))
         nodeKeys = list(self.nodeGroup.nodesLUT.keys())
         pacmanNode = self.nodeGroup.nodesLUT[nodeKeys[iteration % len(nodeKeys)]]
         randomState = State(pacmanNode, None, None, None, None, None)
         availableActions = self.getAvailableActions(randomState)
-        randomState.ghostDirection = random.choice(availableActions)
+        ghostDirections = []
+        for i in range(4):
+            direction = random.choice(availableActions)
+            ghostDirections.append(direction)
+        randomState.ghostDirections = ghostDirections
         randomState.pelletDirection = random.choice(availableActions)
         randomState.availableActions = availableActions
         randomState.isInFreight = random.choice([True, False])
-        randomState.closestGhostDistance = random.choice([10, 300])
+        randomState.closestGhost = random.choice([1, 2, 3, 4])
         return randomState
         
 
@@ -66,17 +67,17 @@ class ReinforcementProblem:
         newState = self.getRandomState(0)
         
         reward = 0
-        if state.ghostDirection == action:
-            if state.isInFreight:
-                reward += 8 
-            else:
-                reward -= 6
-            # elif state.closestGhostDistance < 50:
-            #     reward -= 7
-            # elif state.closestGhostDistance >= 50:
-            #     reward -= 1
+
+        for i in range(len(state.ghostDirections)):
+            if state.ghostDirections[i] == action:
+                if state.isInFreight:
+                    reward += 8 
+                else:
+                    reward -= 1
+                    if i == state.closestGhost:
+                        reward -= 20
         if state.pelletDirection == action:
-            reward += 5
+            reward += 10
 
         return reward, newState
         

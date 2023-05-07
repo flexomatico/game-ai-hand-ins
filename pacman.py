@@ -45,15 +45,16 @@ class Pacman(Entity):
             
             pelletDistance, closestPellet = self.getClosestEntity(self.pelletList)
             ghostDistance, closestGhost = self.getClosestEntity(self.ghosts)
-            # print(ghostDistance)
-            # closestPelletDirection = self.findEntityDirection(self.node, closestPellet)
-            # closestGhostDirection = self.findEntityDirection(self.node, closestGhost)
             self.goal = closestPellet.position
             closestPelletDirection = self.goalDirection(self.validDirections())
-            self.goal = closestGhost.position
-            closestGhostDirection = self.goalDirection(self.validDirections())
-            isInFreight = closestGhost.mode.current == FREIGHT or closestGhost.mode.current == SPAWN
-            state = State(self.node, closestGhostDirection, closestPelletDirection, self.validDirections(), isInFreight, ghostDistance)
+            ghostDirections = []
+            for ghost in self.ghosts:
+                self.goal = ghost.position
+                ghostDirection = self.goalDirection(self.validDirections())
+                ghostDirections.append(ghostDirection)
+                isInFreight = closestGhost.mode.current == FREIGHT or closestGhost.mode.current == SPAWN
+            closestGhostIndex = self.ghosts.index(closestGhost)
+            state = State(self.node, ghostDirections, closestPelletDirection, self.validDirections(), isInFreight, closestGhostIndex)
             self.direction = self.qValueStore.getBestAction(state)
 
             self.target = self.getNewTarget(self.direction)
@@ -101,27 +102,16 @@ class Pacman(Entity):
         minDistance = sys.maxsize
         closestEntity = None
         for entity in entityList:
-            entityDistance = (entity.position - self.node.position).magnitude()
+            entityDistance = self.getEntityManhattanDistance(entity)
 
             if entityDistance < minDistance:
                 minDistance = entityDistance
                 closestEntity = entity
         
         return minDistance, closestEntity
-
-    def findEntityDirection(self, node, entity):
-        xDistance = abs(entity.position.x - node.position.x)
-        yDistance = abs(entity.position.y - node.position.y)
-
-        if(xDistance > yDistance):
-            if(entity.position.x > node.position.x):
-                direction = RIGHT
-            else:
-                direction = LEFT   
-        else:
-            if(entity.position.y > node.position.y):
-                direction = DOWN
-            else:
-                direction = UP
-
-        return direction
+    
+    def getEntityDistance(self, entity):
+        return (entity.position - self.node.position).magnitude()
+    
+    def getEntityManhattanDistance(self, entity):
+        return abs(entity.position.x - entity.position.y) + abs(self.node.position.x - self.node.position.y)
