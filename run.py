@@ -37,6 +37,7 @@ class GameController(object):
         self.fruitNode = None
         self.maze = MazeController()
         self.mazedata = MazeData()######
+        self.qValueStore = None
 
     def setBackground(self):
         self.background_norm = pygame.surface.Surface(SCREENSIZE).convert()
@@ -59,6 +60,8 @@ class GameController(object):
         self.pacman = Pacman(self.nodes.getNodeFromTiles(*self.mazedata.obj.pacmanStart), self.pellets.pelletList)
         self.ghosts = GhostGroup(self.nodes.getStartTempNode(), self.pacman)
         self.pacman.ghosts = self.ghosts.ghosts
+        if not TRAINING:
+            self.pacman.qValueStore = self.qValueStore
 
         self.ghosts.blinky.setStartNode(self.nodes.getNodeFromTiles(*self.mazedata.obj.addOffset(2, 0)))
         if(NUMGHOSTS > 1): self.ghosts.pinky.setStartNode(self.nodes.getNodeFromTiles(*self.mazedata.obj.addOffset(2, 3)))

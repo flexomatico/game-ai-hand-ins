@@ -186,7 +186,7 @@ if __name__ == "__main__":
         qValueStore = QValueStore()
         qValueStore.loadPolicy("felixController")
         game = GameController()
+        game.qValueStore = qValueStore
         game.startGame()
-        game.pacman.qValueStore = qValueStore
         while(True):
             game.update()
