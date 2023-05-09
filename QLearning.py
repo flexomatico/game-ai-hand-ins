@@ -11,7 +11,7 @@ class QValueStore:
         self.qStore = {}
 
     def constructKey(self, state, action):
-        key = str(state.ghostDirections) + str(state.pelletDirection) + str(state.availableActions) + str(state.isInFreight) + str(state.closestGhost) + str(action)
+        key = str(state.ghostDirections) + str(state.pelletDirection) + str(state.availableActions) + str(state.isInFreight) + str(action)
         return key
 
     def getQValue(self, state, action):
@@ -69,23 +69,23 @@ class ReinforcementProblem:
         self.game.update()
         newState = self.game.pacman.compileState()
         self.game.pause.paused = False
-        if self.game.lives <= 0 :
-            self.game.score = 0
-            
+        # if self.game.pacman.diedThisIteration is True:
+        #     reward = -100
+        #     self.game.pacman.diedThisIteration = False
+        # else:
+        #     reward = self.game.score - self.lastScore
         
-        reward = self.game.score - self.lastScore
-        self.lastScore = self.game.score
+        # self.lastScore = self.game.score
 
-        # for i in range(len(state.ghostDirections)):
-        #     if state.ghostDirections[i] == action:
-        #         if state.isInFreight:
-        #             reward += 20
-        #         else:
-        #             reward -= 1
-        #             if i == state.closestGhost:
-        #                 reward -= 20
-        # if state.pelletDirection == action:
-        #     reward += 10
+        reward = 0
+        if state.ghostDirections == action:
+            if state.isInFreight:
+                reward += 20
+            else:
+                reward -= 20
+        if state.pelletDirection == action:
+            reward += 10
+    
 
         return reward, newState
         

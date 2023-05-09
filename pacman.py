@@ -20,6 +20,7 @@ class Pacman(Entity):
         self.ghosts = None
         self.qValueStore = None
         self.learntDirection = STOP
+        self.diedThisIteration = False
 
     def reset(self):
         Entity.reset(self)
@@ -32,6 +33,7 @@ class Pacman(Entity):
     def die(self):
         self.alive = False
         self.direction = STOP
+        self.diedThisIteration = True
 
     def update(self, dt):
         self.sprites.update(dt)
@@ -113,14 +115,15 @@ class Pacman(Entity):
         ghostDistance, closestGhost = self.getClosestEntity(self.ghosts)
         self.goal = closestPellet.position
         closestPelletDirection = self.goalDirection(self.validDirections())
-        ghostDirections = []
-        for ghost in self.ghosts:
-            ghostDistance = self.getEntityManhattanDistance(ghost)
-            # print(ghostDistance)
-            if ghostDistance < 130:
-                self.goal = ghost.position
-                ghostDirection = self.goalDirection(self.validDirections())
-                ghostDirections.append(ghostDirection)
+        self.goal = closestGhost.target.position
+        closestGhostDirection = self.goalDirection(self.validDirections())
+        # ghostDirections = []
+        # for ghost in self.ghosts:
+        #     ghostDistance = self.getEntityManhattanDistance(ghost)
+        #     # print(ghostDistance)
+        #     if ghostDistance < 130:
+        #         self.goal = ghost.position
+        #         ghostDirection = self.goalDirection(self.validDirections())
+        #         ghostDirections.append(ghostDirection)
         isInFreight = closestGhost.mode.current == FREIGHT or closestGhost.mode.current == SPAWN
-        closestGhostIndex = self.ghosts.index(closestGhost)
-        return State(ghostDirections, closestPelletDirection, self.validDirections(), isInFreight, closestGhostIndex)
+        return State(closestGhostDirection, closestPelletDirection, self.validDirections(), isInFreight)

@@ -194,7 +194,10 @@ class GameController(object):
                         self.ghosts.hide()
                         if self.lives <= 0:
                             self.textgroup.showText(GAMEOVERTXT)
-                            self.pause.setPause(pauseTime=3, func=self.restartGame)
+                            if TRAINING:
+                                self.resetLevel()
+                            else:
+                                self.pause.setPause(pauseTime=3, func=self.resetLevel)
                         else:
                             if TRAINING:
                                 self.resetLevel()
