@@ -120,13 +120,12 @@ class Pacman(Entity):
             closestGhostDirection = self.goalDirection(self.validDirections())
         else:
             closestGhostDirection = None
-        # ghostDirections = []
-        # for ghost in self.ghosts:
-        #     ghostDistance = self.getEntityManhattanDistance(ghost)
-        #     # print(ghostDistance)
-        #     if ghostDistance < 130:
-        #         self.goal = ghost.position
-        #         ghostDirection = self.goalDirection(self.validDirections())
-        #         ghostDirections.append(ghostDirection)
+        ghostDirections = []
+        for ghost in self.ghosts:
+            ghostDistance = self.getEntityManhattanDistance(ghost)
+            if ghostDistance < 80.0:
+                self.goal = ghost.position
+                ghostDirection = self.goalDirection(self.validDirections())
+                ghostDirections.append(ghostDirection)
         isInFreight = closestGhost.mode.current == FREIGHT or closestGhost.mode.current == SPAWN
-        return State(closestGhostDirection, closestPelletDirection, self.validDirections(), isInFreight)
+        return State(ghostDirections, closestPelletDirection, self.validDirections(), isInFreight)
