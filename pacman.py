@@ -19,6 +19,7 @@ class Pacman(Entity):
         self.pelletList = pelletList
         self.ghosts = None
         self.qValueStore = None
+        self.learntDirection = STOP
 
     def reset(self):
         Entity.reset(self)
@@ -43,20 +44,11 @@ class Pacman(Entity):
             if self.node.neighbors[PORTAL] is not None:
                 self.node = self.node.neighbors[PORTAL]
             
-            pelletDistance, closestPellet = self.getClosestEntity(self.pelletList)
-            ghostDistance, closestGhost = self.getClosestEntity(self.ghosts)
-            self.goal = closestPellet.position
-            closestPelletDirection = self.goalDirection(self.validDirections())
-            ghostDirections = []
-            for ghost in self.ghosts:
-                self.goal = ghost.position
-                ghostDirection = self.goalDirection(self.validDirections())
-                ghostDirections.append(ghostDirection)
-                isInFreight = closestGhost.mode.current == FREIGHT or closestGhost.mode.current == SPAWN
-            closestGhostIndex = self.ghosts.index(closestGhost)
-            state = State(self.node, ghostDirections, closestPelletDirection, self.validDirections(), isInFreight, closestGhostIndex)
-            self.direction = self.qValueStore.getBestAction(state)
-
+            if TRAINING:
+                self.direction = self.learntDirection
+            else:
+                state = self.compileState()
+                self.direction = self.qValueStore.getBestAction(state)
             self.target = self.getNewTarget(self.direction)
 
             if self.target is self.node:
@@ -114,4 +106,21 @@ class Pacman(Entity):
         return (entity.position - self.node.position).magnitude()
     
     def getEntityManhattanDistance(self, entity):
-        return abs(entity.position.x - entity.position.y) + abs(self.node.position.x - self.node.position.y)
+        return abs(entity.position.x - self.node.position.x) + abs(entity.position.y - self.node.position.y)
+    
+    def compileState(self):
+        pelletDistance, closestPellet = self.getClosestEntity(self.pelletList)
+        ghostDistance, closestGhost = self.getClosestEntity(self.ghosts)
+        self.goal = closestPellet.position
+        closestPelletDirection = self.goalDirection(self.validDirections())
+        ghostDirections = []
+        for ghost in self.ghosts:
+            ghostDistance = self.getEntityManhattanDistance(ghost)
+            # print(ghostDistance)
+            if ghostDistance < 130:
+                self.goal = ghost.position
+                ghostDirection = self.goalDirection(self.validDirections())
+                ghostDirections.append(ghostDirection)
+        isInFreight = closestGhost.mode.current == FREIGHT or closestGhost.mode.current == SPAWN
+        closestGhostIndex = self.ghosts.index(closestGhost)
+        return State(ghostDirections, closestPelletDirection, self.validDirections(), isInFreight, closestGhostIndex)

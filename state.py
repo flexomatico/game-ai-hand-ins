@@ -1,6 +1,5 @@
 class State:
-    def __init__(self, pacmanNode, ghostDirections, pelletDirection, availableActions, isInFreight, closestGhost):
-        self.pacmanNode = pacmanNode
+    def __init__(self, ghostDirections, pelletDirection, availableActions, isInFreight, closestGhost):
         self.ghostDirections = ghostDirections
         self.pelletDirection = pelletDirection
         self.availableActions = availableActions

@@ -31,53 +31,61 @@ class QValueStore:
         key = self.constructKey(state, action)
         self.qStore[key] = value
 
+    # Loads a Q-table.
+    def loadPolicy(self, file):
+        fr = open(file, 'rb')
+        self.qStore = pickle.load(fr)
+        fr.close()
+
 class ReinforcementProblem:
     def __init__(self):
-        self.nodeGroup = NodeGroup("maze1.txt")
+        self.game = GameController()
+        self.lastScore = 0
 
     # Choose a random starting state for the problem.
-    def getRandomState(self, iteration):
-        nodeKeys = list(self.nodeGroup.nodesLUT.keys())
-        pacmanNode = self.nodeGroup.nodesLUT[nodeKeys[iteration % len(nodeKeys)]]
-        randomState = State(pacmanNode, None, None, None, None, None)
-        availableActions = self.getAvailableActions(randomState)
-        ghostDirections = []
-        for i in range(4):
-            direction = random.choice(availableActions)
-            ghostDirections.append(direction)
-        randomState.ghostDirections = ghostDirections
-        randomState.pelletDirection = random.choice(availableActions)
-        randomState.availableActions = availableActions
-        randomState.isInFreight = random.choice([True, False])
-        randomState.closestGhost = random.choice([1, 2, 3, 4])
-        return randomState
+    def getRandomState(self):
+        self.game.restartGame()
+        self.game.pacman.setStartNode(self.getRandomNode())
+        for ghost in self.game.ghosts.ghosts:
+            ghost.setStartNode(self.getRandomNode())
+        self.game.pause.paused = False
         
+        self.lastScore = 0
+
+        return self.game.pacman.compileState()
+        
+    def getRandomNode(self):
+        nodeKeys = list(self.game.nodes.nodesLUT.keys())
+        return self.game.nodes.nodesLUT[random.choice(nodeKeys)]
 
     # Get the available actions for the given state.
     def getAvailableActions(self, state):
-        actions = []
-        for key in [UP, DOWN, LEFT, RIGHT]:
-            if state.pacmanNode.neighbors[key] is not None:
-                actions.append(key)
-        return actions
+        return state.availableActions
 
     # Take the given action and state, and return
     # a pair consisting of the reward and the new state.
     def takeAction(self, state, action):
-        newState = self.getRandomState(0)
+        self.game.pacman.learntDirection = action
+        self.game.update()
+        newState = self.game.pacman.compileState()
+        self.game.pause.paused = False
+        if self.game.lives <= 0 :
+            self.game.score = 0
+            
         
-        reward = 0
+        reward = self.game.score - self.lastScore
+        self.lastScore = self.game.score
 
-        for i in range(len(state.ghostDirections)):
-            if state.ghostDirections[i] == action:
-                if state.isInFreight:
-                    reward += 8 
-                else:
-                    reward -= 1
-                    if i == state.closestGhost:
-                        reward -= 20
-        if state.pelletDirection == action:
-            reward += 10
+        # for i in range(len(state.ghostDirections)):
+        #     if state.ghostDirections[i] == action:
+        #         if state.isInFreight:
+        #             reward += 20
+        #         else:
+        #             reward -= 1
+        #             if i == state.closestGhost:
+        #                 reward -= 20
+        # if state.pelletDirection == action:
+        #     reward += 10
 
         return reward, newState
         
@@ -90,15 +98,18 @@ class QLearner:
     # Updates the store by investigating the problem.
     def QLearning(self, problem, alpha, gamma, rho, nu):
         # Get a starting state.
-        state = problem.getRandomState(0)
+        state = problem.getRandomState()
 
         # Repeat a number of times.
-        for i in range(ITERATIONS):
-            if i % 500 == 0:
+        # for i in range(ITERATIONS):
+        i = 0
+        while True:
+            if i % 10000 == 0:
                 self.savePolicy(i)
+            i += 1
             # Pick a new state every once in a while.
             if random.random() < nu:
-                state = problem.getRandomState(i)
+                state = problem.getRandomState()
 
             # Get the list of available actions.
             actions = problem.getAvailableActions(state)
@@ -138,13 +149,6 @@ class QLearner:
             f.write(fileName + " - Completed Training Iterations: " + str(iterations))
         print(fileName + " - Completed Training Iterations: " + str(iterations))
 
-    # Loads a Q-table.
-    def loadPolicy(self, file):
-        fr = open(file, 'rb')
-        self.store.qStore = pickle.load(fr)
-        fr.close()
-        return self.store.qStore
-
 if __name__ == "__main__":
     #### PARAMETERS:
     # ALPHA -> Learning Rate
@@ -158,26 +162,21 @@ if __name__ == "__main__":
 
     # NU: The Length of Walk
     # number of iterations that will be carried out in a sequence of connected actions.
-    
-    rho=0.3
-    alpha=0.7
-    gamma=0
-    nu = 1.0    # Always pick a random state for a new iteration
 
     if TRAINING:
+        rho=0.2
+        alpha=0.3
+        gamma=0.75
+        nu = 0.001  
         problem = ReinforcementProblem()
         qLearner = QLearner()
+        qLearner.store.loadPolicy("felixController")
         qLearner.QLearning(problem, alpha, gamma, rho, nu)
-    # else:
-    #     qLearner = QLearner()
-    #     loadedStore = qLearner.loadPolicy("felixController")
-    #     qLearner.store.qStore = loadedStore
+    else:
+        qValueStore = QValueStore()
+        qValueStore.loadPolicy("felixController")
         game = GameController()
         game.startGame()
-        # for q in loadedStore.keys():
-        #     print(q)
-        # print(len(loadedStore.keys()))
-        game.pacman.qValueStore = qLearner.store
-        game.update()
-        while True:
+        game.pacman.qValueStore = qValueStore
+        while(True):
             game.update()
