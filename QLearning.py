@@ -77,13 +77,22 @@ class ReinforcementProblem:
         
         # self.lastScore = self.game.score
 
+        # reward = 0
+        # for i in range(len(state.ghostDirections)):
+        #     if state.ghostDirections[i] == action:
+        #         if state.isInFreight:
+        #             reward += 20
+        #         else:
+        #             reward -= 20
+        # if state.pelletDirection == action:
+        #     reward += 10
+
         reward = 0
-        for i in range(len(state.ghostDirections)):
-            if state.ghostDirections[i] == action:
-                if state.isInFreight:
-                    reward += 20
-                else:
-                    reward -= 20
+        if state.ghostDirections != None and state.ghostDirections == action:
+            if state.isInFreight:
+                reward += 20
+            else:
+                reward -= 20
         if state.pelletDirection == action:
             reward += 10
     
