@@ -115,8 +115,11 @@ class Pacman(Entity):
         ghostDistance, closestGhost = self.getClosestEntity(self.ghosts)
         self.goal = closestPellet.position
         closestPelletDirection = self.goalDirection(self.validDirections())
-        self.goal = closestGhost.target.position
-        closestGhostDirection = self.goalDirection(self.validDirections())
+        self.goal = closestGhost.position
+        if ghostDistance < 80.0:
+            closestGhostDirection = self.goalDirection(self.validDirections())
+        else:
+            closestGhostDirection = None
         # ghostDirections = []
         # for ghost in self.ghosts:
         #     ghostDistance = self.getEntityManhattanDistance(ghost)

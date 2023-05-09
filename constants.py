@@ -47,7 +47,7 @@ GAMESPEED = 1
 TRAINING = False
 RENDER = True
 
-# GAMESPEED = 20
+# GAMESPEED = 30
 # TRAINING = True
 # RENDER = False
 

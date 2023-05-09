@@ -78,7 +78,7 @@ class ReinforcementProblem:
         # self.lastScore = self.game.score
 
         reward = 0
-        if state.ghostDirections == action:
+        if state.ghostDirections != None and state.ghostDirections == action:
             if state.isInFreight:
                 reward += 20
             else:
